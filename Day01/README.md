@@ -1,4 +1,4 @@
-`./Day1 +RTS -s`
+`./Day01 +RTS -s`
 
 List-based version:
 
