@@ -12,7 +12,7 @@ incCount (twos, threes) (3, _) = (twos, threes + 1)
 incCount x _ = x
 
 sumTuples :: [(Int, Int)] -> Int
-sumTuples xs = (sum twos) * (sum threes)
+sumTuples xs = sum twos * sum threes
   where
     (twos, threes) = unzip xs
 
