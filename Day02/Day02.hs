@@ -25,10 +25,7 @@ ex1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
 -- Given a list of box IDs produce a list of box ID pairs
 -- that can be checked for closeness
 combinations :: [a] -> [(a, a)]
-combinations l = combinations' l (tails $ tail l)
-
-combinations' :: [a] -> [[a]] -> [(a, a)]
-combinations' l = concatMap (zip l)
+combinations l = concatMap (zip l) (tails $ tail l)
 
 diffCount :: Eq a => [a] -> [a] -> Int
 diffCount [] [] = 0
