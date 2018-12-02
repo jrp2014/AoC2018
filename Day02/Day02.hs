@@ -12,10 +12,9 @@ incCount (twos, threes) (3, _) = (twos, threes + 1)
 incCount x _ = x
 
 sumTuples :: [(Int, Int)] -> Int
-sumTuples xs = twos * threes
+sumTuples xs = (sum twos) * (sum threes)
   where
-    twos = sum $ map fst xs
-    threes = sum $ map snd xs
+    (twos, threes) = unzip xs
 
 ex1 :: [String]
 ex1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
