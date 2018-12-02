@@ -26,8 +26,10 @@ ex1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
 --
 -- Given a list of box IDs produce a list of box ID pairs
 -- that can be checked for closeness
+-- This version avoid duplicates
 combinations :: [a] -> [(a, a)]
 combinations l = concatMap (zip l) (tails $ tail l)
+-- combinations l = [ (diffCount x y, (x, y)) | x <- l, y <- l ]
 
 diffCount :: Eq a => [a] -> [a] -> Int
 diffCount [] [] = 0
@@ -42,6 +44,7 @@ diffs l = map (\z@(x, y) -> (diffCount x y, z)) $ combinations l
 -- bestMatch ... one with the fewst diffs wins
 bestMatch :: Eq a => [[a]] -> [(Int, ([a], [a]))]
 bestMatch l = sortOn fst (diffs l)
+-- bestMatch l = filter ((==1) . fst) (diffs l)
 
 commonLetters :: Eq a => [a] -> [a] -> [a]
 commonLetters (x:xs) (y:ys)
