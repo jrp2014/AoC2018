@@ -1,5 +1,7 @@
 module Main where
 
+import qualified Data.Set as Set
+
 -- Specialize read for reading Ints
 readInt :: String -> Int
 readInt = read
@@ -8,17 +10,17 @@ readInt = read
 accumulate :: [Int] -> [Int]
 accumulate = scanl (+) 0
 
--- This is probably O(N^2) but it's not worth using a Set-based
+-- This is probably O(N^2) using lists, but is much faster using Sets.
 -- version for this problem.  This version will not terminate if there
 -- no duplicatess.
 -- Could, no doubt be turned into a fold...
-firstDuplicate :: Eq a => [a] -> a
-firstDuplicate = go []
+firstDuplicate :: Ord a => [a] -> a
+firstDuplicate = go Set.empty
   where
-    go :: Eq a => [a]  -> [a] -> a
+    go :: Ord a => Set.Set a  -> [a] -> a
     go s (h : t)
-      | h `elem` s = h
-      | otherwise = go (h:s) t
+      | h `Set.member` s = h
+      | otherwise = go (Set.insert h s) t
 
 main :: IO ()
 main = do
