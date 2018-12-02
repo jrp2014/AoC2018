@@ -2,7 +2,6 @@ module Main where
 
 import Data.List
 import Data.List.Unique
-import Data.Ord
 
 solve1 :: [String] -> Int
 solve1 = sumTuples . map (foldl incCount (0, 0) . occurrences)
@@ -43,10 +42,12 @@ diffs l = map (\(x, y) -> (diffCount x y, (x, y))) $ combinations l
 bestMatch :: Eq a => [[a]] -> [(Int, ([a], [a]))]
 bestMatch l = sortOn fst (diffs l)
 
+solve2 :: Eq a => [[a]] -> [a]
 solve2 l = commonLetters x y
   where
     (_, (x, y)) = head $ bestMatch l
 
+commonLetters :: Eq a => [a] -> [a] -> [a]
 commonLetters (x:xs) (y:ys)
   | x == y = x : commonLetters xs ys
   | otherwise = commonLetters xs ys
