@@ -21,6 +21,8 @@ ex1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
 
 -- Part 2
 --
+-- This is a more general solution than is required if we
+-- guarantee that exactly one pair of IDs differ by only 1 char
 --
 -- Given a list of box IDs produce a list of box ID pairs
 -- that can be checked for closeness
