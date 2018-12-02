@@ -1,6 +1,8 @@
 module Main where
 
+import Data.List
 import Data.List.Unique
+import Data.Ord
 
 solve1 :: [String] -> Int
 solve1 =  sumTuples . map (foldl incCount (0, 0) . occurrences)
@@ -28,6 +30,50 @@ ex1 = [
   "ababab"
   ]
 
+-- Part 2
+--
+--
+
+combinations :: [a] -> [(a, a)]
+combinations l = combinations' l (tails $ tail l)
+
+combinations' :: [a]  -> [[a]] -> [(a, a)]
+combinations' l (y : ys) = (zip l y) ++  combinations' l ys
+combinations' l [] = []
+
+diffCount :: Eq a => [a] -> [a] -> Int
+diffCount [] [] = 0
+diffCount (x : xs ) (y : ys)
+  | x /= y = 1 + diffCount xs ys
+  | otherwise = diffCount xs ys
+
+diffs :: Eq a => [[a]] -> [(Int, ([a], [a]))]
+diffs l = map (\(x, y) -> (diffCount x y, (x, y))) $ combinations l
+
+-- bestMatcfh ... the one with the fewst diffs
+bestMatch :: Eq a => [[a]] -> [(Int, ([a], [a]))]
+bestMatch l = sortBy (comparing fst) (diffs l)
+
+solve2 l = commonLetters x y
+  where
+    (_, (x, y)) = head $ bestMatch l
+
+commonLetters (x : xs) (y : ys)
+  | x == y = x : commonLetters xs ys
+  | otherwise = commonLetters xs ys
+commonLetters [] [] = []
+
+
+ex2 :: [String]
+ex2 = [
+  "abcde",
+  "fghij",
+  "klmno",
+  "pqrst",
+  "fguij",
+  "axcye",
+  "wvxyz"]
+
 main :: IO ()
 main = do
   ids <- readFile "input.txt"
@@ -35,4 +81,5 @@ main = do
   print $ solve1 ex1
   print $ solve1 (lines ids)
   -- Part Two
-  
+  print $ solve2 ex2
+  print $ solve2 (lines ids)
