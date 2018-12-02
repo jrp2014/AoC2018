@@ -60,9 +60,10 @@ ex2 = ["abcde", "fghij", "klmno", "pqrst", "fguij", "axcye", "wvxyz"]
 main :: IO ()
 main = do
   ids <- readFile "input.txt"
+  let lids = lines ids
   -- Part One
   print $ solve1 ex1
-  print $ solve1 (lines ids)
+  print $ solve1 lids
   -- Part Two
   print $ solve2 ex2
-  print $ solve2 (lines ids)
+  print $ solve2 lids
