@@ -23,6 +23,8 @@ ex1 = ["abcdef", "bababc", "abbcde", "abcccd", "aabcdd", "abcdee", "ababab"]
 -- Part 2
 --
 --
+-- Given a list of box IDs produce a list of box ID pairs
+-- that can be checked for closeness
 combinations :: [a] -> [(a, a)]
 combinations l = combinations' l (tails $ tail l)
 
@@ -35,23 +37,24 @@ diffCount (x:xs) (y:ys)
   | x /= y = 1 + diffCount xs ys
   | otherwise = diffCount xs ys
 
+-- capture the number of differences between a pair of IDs
 diffs :: Eq a => [[a]] -> [(Int, ([a], [a]))]
-diffs l = map (\(x, y) -> (diffCount x y, (x, y))) $ combinations l
+diffs l = map (\z@(x, y) -> (diffCount x y, z)) $ combinations l
 
--- bestMatcfh ... the one with the fewst diffs
+-- bestMatch ... one with the fewst diffs wins
 bestMatch :: Eq a => [[a]] -> [(Int, ([a], [a]))]
 bestMatch l = sortOn fst (diffs l)
-
-solve2 :: Eq a => [[a]] -> [a]
-solve2 l = commonLetters x y
-  where
-    (_, (x, y)) = head $ bestMatch l
 
 commonLetters :: Eq a => [a] -> [a] -> [a]
 commonLetters (x:xs) (y:ys)
   | x == y = x : commonLetters xs ys
   | otherwise = commonLetters xs ys
 commonLetters [] [] = []
+
+solve2 :: Eq a => [[a]] -> [a]
+solve2 l = commonLetters x y
+  where
+    (_, (x, y)) = head $ bestMatch l
 
 ex2 :: [String]
 ex2 = ["abcde", "fghij", "klmno", "pqrst", "fguij", "axcye", "wvxyz"]
