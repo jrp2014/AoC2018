@@ -1,6 +1,6 @@
 `./Day1 +RTS -s`
 
-``
+```
 525
 75749
       25,342,304 bytes allocated in the heap
@@ -24,4 +24,4 @@
   Alloc rate    357,971 bytes per MUT second
 
   Productivity 100.0% of total user, 100.0% of total elapsed
-  ``
+  ```
