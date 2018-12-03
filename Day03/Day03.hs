@@ -8,6 +8,8 @@ import qualified Data.Map as Map
 
 type Coord = (Int, Int)
 
+type Fabric = Map.Map Coord Int
+
 data Claim = Claim
   { identifier :: Int
   , left :: Int
@@ -56,17 +58,25 @@ claimCoords Claim { identifier = i
 freqMap :: Ord a => [a] -> Map.Map a Int
 freqMap = Map.fromListWith (+) . map (, 1)
 
-cover :: [Claim] -> Map.Map Coord Int
+cover :: [Claim] -> Fabric
 cover = freqMap . concatMap claimCoords
 
 solve1 :: [Claim] -> Int
-solve1 cs = length . filter (>= 2) . Map.elems $ cover cs
+solve1 claims = length . filter (>= 2) . Map.elems $ cover claims
 
 ex1 :: [String]
 ex1 = ["#1 @ 1,3: 4x4", "#2 @ 3,1: 4x4", "#3 @ 5,5: 2x2"]
 
-solve2 :: Eq a => [[a]] -> [a]
-solve2 = undefined
+findNonOverlappingClaim :: Fabric -> [Claim] -> Int
+findNonOverlappingClaim fabric claims =
+  head
+    [ identifier claim
+    | claim <- claims
+    , all (== 1) (Map.intersection fabric (cover [claim]))
+    ]
+
+solve2 :: [Claim] -> Int
+solve2 claims = findNonOverlappingClaim (cover claims) claims
 
 main :: IO ()
 main = do
@@ -75,3 +85,6 @@ main = do
   -- Part One
   print $ solve1 $ map parse ex1
   print $ solve1 $ map parse lclaims
+  -- Part Two
+  print $ solve2 $ map parse ex1
+  print $ solve2 $ map parse lclaims
