@@ -10,8 +10,10 @@ type Coord = (Int, Int)
 
 type Fabric = Map.Map Coord Int
 
+type Id = Int
+
 data Claim = Claim
-  { identifier :: Int
+  { identifier :: Id
   , left :: Int
   , top :: Int
   , width :: Int
@@ -44,8 +46,13 @@ parse s =
                    else ' ')
               s))
 
+data Point = Point
+  { coord :: Coord
+  , ident :: Id
+  }
+
 -- Generate the list of coordiates covered by a claim
-claimCoords :: Claim -> [Coord]
+claimCoords :: Claim -> [Point]
 claimCoords Claim { identifier = i
                   , left = l
                   , top = t
@@ -53,13 +60,14 @@ claimCoords Claim { identifier = i
                   , height = h
                   , bottom = b
                   , right = r
-                  } = [(x, y) | x <- [l .. r - 1], y <- [t .. b - 1]]
+                  } =
+  [Point {coord = (x, y), ident = i} | x <- [l .. r - 1], y <- [t .. b - 1]]
 
 freqMap :: Ord a => [a] -> Map.Map a Int
 freqMap = Map.fromListWith (+) . map (, 1)
 
 cover :: [Claim] -> Fabric
-cover = freqMap . concatMap claimCoords
+cover = freqMap . map coord . concatMap claimCoords
 
 solve1 :: [Claim] -> Int
 solve1 claims = length . filter (>= 2) . Map.elems $ cover claims
