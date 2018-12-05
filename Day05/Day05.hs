@@ -2,7 +2,7 @@ module Main where
 
 import Data.Char (isUpper, toLower)
 import Data.List (minimum)
---import Data.List.Extra (nubOrd)
+import Data.List.Extra (nubOrd)
 
 type Polymer = String
 
@@ -32,8 +32,8 @@ solveShorter :: Polymer -> [Int]
 solveShorter pps = [length . solve $ removeUnit u ps | u <- units]
   where
     ps = solve pps
-    --units = nubOrd ps -- not worth doing
-    units = ['a' .. 'z']
+    units = nubOrd . map toLower $ ps -- not worth doing
+    -- units = ['a' .. 'z']
 
 solve2 :: Polymer -> Int
 solve2 = minimum . solveShorter
