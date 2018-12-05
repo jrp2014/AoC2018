@@ -1,6 +1,6 @@
 module Main where
 
-import Data.Char (isUpper, toLower)
+import Data.Char (toLower)
 import Data.List (minimum)
 import Data.List.Extra (nubOrd)
 
@@ -12,7 +12,7 @@ solve :: Polymer -> Polymer
 solve = foldr step []
   where
     reacts :: Unit -> Unit -> Bool
-    reacts u v = toLower u == toLower v && isUpper u /= isUpper v
+    reacts u v = toLower u == toLower v && u /= v
     step :: Unit -> String -> String
     step u (v:vs)
       | reacts u v = vs
