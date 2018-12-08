@@ -44,8 +44,10 @@ sum2 = do
 -- Indexatio from 1, rather than 0
 safeIndex :: [a] -> Int -> Maybe a
 safeIndex (x:_) 1 = Just x
-safeIndex (_:xs) i = safeIndex xs (i - 1)
-safeIndex _ _ = Nothing
+safeIndex [] _ = Nothing
+safeIndex (_:xs) i
+  | i < 1 = Nothing
+  | otherwise = safeIndex xs (i - 1)
 
 parse :: String -> [Int]
 parse = map read . words
