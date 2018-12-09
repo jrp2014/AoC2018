@@ -63,13 +63,13 @@ Skip unecessary updates:
   Alloc rate    4,907,849,469 bytes per MUT second
 
   Productivity  19.7% of total user, 19.6% of total elapsed
-}}}
+```
 
 
 
-Using Data.Sequence, rather than [] for keeping / updating scores
+Using Data.Sequence, rather than [] for keeping / updating scores.  So not really worth it.  Might be better to use vectors.
 
-{{{
+```
 ./Day09seq +RTS -s            
 32
 7932
