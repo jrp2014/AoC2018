@@ -1,7 +1,8 @@
 module Main where
 
-import Data.List (foldl', maximum, splitAt)
+--import Data.List (foldl', maximum, splitAt)
 import Data.Maybe (fromJust)
+import qualified Data.Sequence as Seq
 
 data Tape a = Tape
   { leftReversed :: [a]
@@ -52,6 +53,8 @@ type Circle = Tape Int
 
 type Score = Int
 
+type Results = Seq.Seq Score
+
 turn :: Marble -> Circle -> (Score, Circle)
 turn marble circle
   | marble `mod` 23 == 0 =
@@ -61,20 +64,20 @@ turn marble circle
     shiftedCircle = shiftFocusN (-7) circle
     existingMarble = current shiftedCircle
 
-game :: Int -> Int -> ([Score], Circle)
-game nPlayers nMarbles = foldl' newScores (initialScores, initialCircle) turns
+game :: Int -> Int -> (Results, Circle)
+game nPlayers nMarbles = foldl newScores (initialScores, initialCircle) turns
   where
     newScores (scores, circle) (player, marble) =
       ( if score == 0
           then scores
-          else changeNthElement player (+ score) scores
+          else Seq.adjust (+ score) player scores
       , circle')
       where
         (score, circle') = turn marble circle
     players = cycle [1 .. nPlayers]
     marbles = [1 .. nMarbles]
     turns = zip players marbles
-    initialScores = replicate nPlayers 0
+    initialScores = Seq.replicate nPlayers 0
     initialCircle = Tape [] 0 []
 
 solve1 :: Int -> Int -> Int
