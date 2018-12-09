@@ -1,5 +1,4 @@
-
-{{{
+```
 ./Day09 +RTS -s
 32
 8317
@@ -30,10 +29,10 @@
   Alloc rate    5,893,039,798 bytes per MUT second
 
   Productivity  31.3% of total user, 31.2% of total elapsed
-}}}
+```
 
 Skip unecessary updates:
-{{{
+```
 ./Day09 +RTS -s          
 32
 8317
@@ -101,4 +100,4 @@ Using Data.Sequence, rather than [] for keeping / updating scores
   Alloc rate    2,546,026,433 bytes per MUT second
 
   Productivity  13.2% of total user, 13.2% of total elapsed
-}}}
+```
