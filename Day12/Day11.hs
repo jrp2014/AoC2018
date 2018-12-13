@@ -74,8 +74,8 @@ ex1 =
   , "####. => #"
   ]
 
--- Produce generation by generations
--- triples of (generation number, visual representation of the pots, sumPots)
+-- Produce generation by generation tripes of
+-- (generation number, visual representation of the pots, sumPots)
 -- from number of generations to produce, and the input
 solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
 solve1 n s =
@@ -91,7 +91,7 @@ solve2 n s =
   where
     (s0, rs) = parse s
 
--- A couple of helper functions to identify a constant increment of sumPot state
+-- A couple of helper functions to identify a constant increment of sumPots state
 diff :: [(Int, Int)] -> [(Int, Int, Int)]
 diff s = zipWith (\(a, b) (_, d) -> (a, b, d - b)) s (tail s)
 
