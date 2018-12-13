@@ -44,6 +44,8 @@ step r (State plant) = State $ map (applyRules r) $ windows 5 padplant
   where
     padplant = padding ++ plant ++ padding
 
+-- Rather than carrying indexes around, it's not hard to count the popots
+-- from the iteration number and offsetting
 countPots :: Int -> State Plant -> Int
 countPots itern (State s) = sum $ zipWith (curry countPot) [-itern ..] s
   where
