@@ -74,7 +74,7 @@ ex1 =
   , "####. => #"
   ]
 
--- Produce generation byg generations
+-- Produce generation by generations
 -- triples of (generation number, visual representation of the pots, sumPots)
 -- from number of generations to produce, and the input
 solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
