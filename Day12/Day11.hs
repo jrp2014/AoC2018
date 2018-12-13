@@ -44,10 +44,10 @@ step r (State plant) = State $ map (applyRules r) $ windows 5 padplant
   where
     padplant = padding ++ plant ++ padding
 
--- Rather than carrying indexes around, it's not hard to count the popots
--- from the iteration number and offsetting
-countPots :: Int -> State Plant -> Int
-countPots itern (State s) = sum $ zipWith (curry countPot) [-itern ..] s
+-- Rather than carrying indexes around, it's not hard to count the pots
+-- from the generation number, and offsetting
+sumPots :: Int -> State Plant -> Int
+sumPots generation (State s) = sum $ zipWith (curry countPot) [-generation ..] s
   where
     countPot (i, p) =
       if p == '#'
@@ -74,19 +74,24 @@ ex1 =
   , "####. => #"
   ]
 
-solve1 :: Int -> [String] -> [String]
+-- Produce generation byg generations
+-- triples of (generation number, visual representation of the pots, sumPots)
+-- from number of generations to produce, and the input
+solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
 solve1 n s =
-  map (\(c, sps@(State ps)) -> show (c, ps, countPots c sps)) $
+  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) $
   zip [0 .. n] $ iterate (step rs) s0
   where
     (s0, rs) = parse s
 
+-- same as solve1, but omit the visual representation of the pots
 solve2 :: Int -> [String] -> [(Int, Int)]
 solve2 n s =
-  map (\(c, sps) -> (c, countPots c sps)) $ zip [0 .. n] $ iterate (step rs) s0
+  map (\(c, sps) -> (c, sumPots c sps)) $ zip [0 .. n] $ iterate (step rs) s0
   where
     (s0, rs) = parse s
 
+-- A couple of helper functions to identify a constant increment of sumPot state
 diff :: [(Int, Int)] -> [(Int, Int, Int)]
 diff s = zipWith (\(a, b) (_, d) -> (a, b, d - b)) s (tail s)
 
@@ -97,11 +102,11 @@ findConstantDiff ((a, b, c):(d, e, f):(g, h, i):xs)
 
 main :: IO ()
 main = do
-  putStrLn $ last $ solve1 20 ex1
+  print $ last $ solve1 20 ex1
   notes <- readFile "input.txt"
   let lnotes = lines notes
   -- Part One
-  putStrLn $ last $ solve1 20 lnotes
+  print $ last $ solve1 20 lnotes
   --- Part Two
   print $ diff $ solve2 200 lnotes
   let (repeatsFrom, repeatPotsSum, delta) =
