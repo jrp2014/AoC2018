@@ -73,9 +73,9 @@ ex1 =
   , "####. => #"
   ]
 
--- Produce generation by generation tripes of
+-- Produce generation by generation triples of
 -- (generation number, visual representation of the pots, sumPots)
--- from number of generations to produce, and the input
+-- from number of generations to produce, and the puzzle input
 solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
 solve1 n s =
   map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) .
