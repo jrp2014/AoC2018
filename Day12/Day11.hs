@@ -30,17 +30,16 @@ parse (s0:_:rs) = (ps, prs)
     ps = parseState . drop 15 $ s0
     prs = parseRules rs
 
+-- Sliding window
 windows :: Int -> [a] -> [[a]]
 windows m = foldr (zipWith (:)) (repeat []) . take m . tails
 
+-- Should this be 4 empties? 2 is not enough
 padding :: [Plant]
 padding = "..."
 
-paddingLength :: Int
-paddingLength = length padding
-
 step :: Rules Plant -> State Plant -> State Plant
-step r (State plant) = State $ map (applyRules r) $ windows 5 padplant
+step r (State plant) = State . map (applyRules r) $ windows 5 padplant
   where
     padplant = padding ++ plant ++ padding
 
@@ -79,7 +78,7 @@ ex1 =
 -- from number of generations to produce, and the input
 solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
 solve1 n s =
-  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) $
+  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) .
   zip [0 .. n] $ iterate (step rs) s0
   where
     (s0, rs) = parse s
@@ -87,7 +86,7 @@ solve1 n s =
 -- same as solve1, but omit the visual representation of the pots
 solve2 :: Int -> [String] -> [(Int, Int)]
 solve2 n s =
-  map (\(c, sps) -> (c, sumPots c sps)) $ zip [0 .. n] $ iterate (step rs) s0
+  map (\(c, sps) -> (c, sumPots c sps)) . zip [0 .. n] $ iterate (step rs) s0
   where
     (s0, rs) = parse s
 
