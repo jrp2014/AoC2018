@@ -4,27 +4,27 @@ import Data.List (tails)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
 
-type Plant = Char
+type Pot = Char -- # or .
 
-type Rules a = Map.Map (a, a, a, a, a) a
+type Rules a = Map.Map (a, a, a, a, a) a -- or "notes"
 
 newtype State a =
   State [a]
   deriving (Show)
 
-parseState :: String -> State Plant
+parseState :: String -> State Pot
 parseState = State
 
-parseRules :: [String] -> Rules Plant
+parseRules :: [String] -> Rules Pot
 parseRules s = Map.fromList $ map parseRule s
   where
-    parseRule :: String -> ((Plant, Plant, Plant, Plant, Plant), Plant)
+    parseRule :: String -> ((Pot, Pot, Pot, Pot, Pot), Pot)
     parseRule [a, b, c, d, e, ' ', '=', '>', ' ', p] = ((a, b, c, d, e), p)
 
-applyRules :: Rules Plant -> [Plant] -> Plant
+applyRules :: Rules Pot -> [Pot] -> Pot
 applyRules r [a, b, c, d, e] = fromMaybe '.' (Map.lookup (a, b, c, d, e) r)
 
-parse :: [String] -> (State Plant, Rules Plant)
+parse :: [String] -> (State Pot, Rules Pot)
 parse (s0:_:rs) = (ps, prs)
   where
     ps = parseState . drop 15 $ s0
@@ -35,20 +35,21 @@ windows :: Int -> [a] -> [[a]]
 windows m = foldr (zipWith (:)) (repeat []) . take m . tails
 
 -- Should this be 4 empties? 2 is not enough
-padding :: [Plant]
+padding :: [Pot]
 padding = "..."
 
-step :: Rules Plant -> State Plant -> State Plant
-step r (State plant) = State . map (applyRules r) $ windows 5 padplant
+nextGen :: Rules Pot -> State Pot -> State Pot
+nextGen r (State pot) = State . map (applyRules r) $ windows 5 padpot
   where
-    padplant = padding ++ plant ++ padding
+    padpot = padding ++ pot ++ padding
 
--- Rather than carrying indexes around, it's not hard to count the pots
+-- Rather than carrying indexes around, it's not hard to sum the pots
 -- from the generation number, and offsetting
-sumPots :: Int -> State Plant -> Int
-sumPots generation (State s) = sum $ zipWith (curry countPot) [-generation ..] s
+sumPots :: Int -> State Pot -> Int
+sumPots generation (State s) =
+  sum $ zipWith (curry potContribution) [-generation ..] s
   where
-    countPot (i, p) =
+    potContribution (i, p) =
       if p == '#'
         then i
         else 0
@@ -76,17 +77,17 @@ ex1 =
 -- Produce generation by generation triples of
 -- (generation number, visual representation of the pots, sumPots)
 -- from number of generations to produce, and the puzzle input
-solve1 :: Int -> [String] -> [(Int, [Plant], Int)]
+solve1 :: Int -> [String] -> [(Int, [Pot], Int)]
 solve1 n s =
-  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) .
-  zip [0 .. n] $ iterate (step rs) s0
+  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) . zip [0 .. n] $
+  iterate (nextGen rs) s0
   where
     (s0, rs) = parse s
 
 -- same as solve1, but omit the visual representation of the pots
 solve2 :: Int -> [String] -> [(Int, Int)]
 solve2 n s =
-  map (\(c, sps) -> (c, sumPots c sps)) . zip [0 .. n] $ iterate (step rs) s0
+  map (\(c, sps) -> (c, sumPots c sps)) . zip [0 .. n] $ iterate (nextGen rs) s0
   where
     (s0, rs) = parse s
 
