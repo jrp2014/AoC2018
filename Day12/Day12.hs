@@ -4,7 +4,18 @@ import Data.List (tails)
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
 
-type Pot = Char -- # or .
+data Pot
+  = Plant
+  | NoPlant
+  deriving (Show, Eq, Ord)
+
+parsePot :: Char -> Pot
+parsePot '#' = Plant
+parsePot '.' = NoPlant
+
+renderPot :: Pot -> Char
+renderPot Plant = '#'
+renderPot NoPlant = '.'
 
 type Rules a = Map.Map (a, a, a, a, a) a -- or "notes"
 
@@ -13,16 +24,17 @@ newtype State a =
   deriving (Show)
 
 parseState :: String -> State Pot
-parseState = State
+parseState = State . map parsePot
 
 parseRules :: [String] -> Rules Pot
 parseRules s = Map.fromList $ map parseRule s
   where
     parseRule :: String -> ((Pot, Pot, Pot, Pot, Pot), Pot)
-    parseRule [a, b, c, d, e, ' ', '=', '>', ' ', p] = ((a, b, c, d, e), p)
+    parseRule [a, b, c, d, e, ' ', '=', '>', ' ', p] =
+      ((parsePot a, parsePot b, parsePot c, parsePot d, parsePot e), parsePot p)
 
 applyRules :: Rules Pot -> [Pot] -> Pot
-applyRules r [a, b, c, d, e] = fromMaybe '.' (Map.lookup (a, b, c, d, e) r)
+applyRules r [a, b, c, d, e] = fromMaybe NoPlant (Map.lookup (a, b, c, d, e) r)
 
 parse :: [String] -> (State Pot, Rules Pot)
 parse (s0:_:rs) = (ps, prs)
@@ -36,7 +48,7 @@ windows m = foldr (zipWith (:)) (repeat []) . take m . tails
 
 -- Should this be 4 empties? 2 is not enough
 padding :: [Pot]
-padding = "..."
+padding = map parsePot "..."
 
 nextGen :: Rules Pot -> State Pot -> State Pot
 nextGen r (State pot) = State . map (applyRules r) $ windows 5 padpot
@@ -50,7 +62,7 @@ sumPots generation (State s) =
   sum $ zipWith (curry potContribution) [-generation ..] s
   where
     potContribution (i, p) =
-      if p == '#'
+      if p == Plant
         then i
         else 0
 
@@ -77,9 +89,10 @@ ex1 =
 -- Produce generation by generation triples of
 -- (generation number, visual representation of the pots, sumPots)
 -- from number of generations to produce, and the puzzle input
-solve1 :: Int -> [String] -> [(Int, [Pot], Int)]
+solve1 :: Int -> [String] -> [(Int, String, Int)]
 solve1 n s =
-  map (\(c, sps@(State ps)) -> (c, ps, sumPots c sps)) . zip [0 .. n] $
+  map (\(c, sps@(State ps)) -> (c, map renderPot ps, sumPots c sps)) .
+  zip [0 .. n] $
   iterate (nextGen rs) s0
   where
     (s0, rs) = parse s
