@@ -12,8 +12,8 @@ type Grid = Map Coord Power
 gridSize :: Int
 gridSize = 300
 
-chargeAt :: Serial -> Coord -> Power
-chargeAt serialNumber (x, y) = totalPower
+powerAt :: Serial -> Coord -> Power
+powerAt serialNumber (x, y) = totalPower
   where rackID = x + 10
         initialPower = ((rackID * y) + serialNumber) * rackID
         hundredsDigit = initialPower `div` 100 `mod` 10
@@ -21,7 +21,7 @@ chargeAt serialNumber (x, y) = totalPower
 
 fuelCellGrid :: Serial -> Int -> Grid
 fuelCellGrid serialNumber size =
-  fromList [((x,y), chargeAt serialNumber (x, y)) | x <- [1..size], y <- [1..size]]
+  fromList [((x,y), powerAt serialNumber (x, y)) | x <- [1..size], y <- [1..size]]
 
 -- Direct appproach
 totalPowerAt :: Grid -> Int -> Coord -> (Coord, Power)
@@ -33,18 +33,22 @@ maxPower size grid squareSize =
   maximumBy (comparing snd) $
   map (totalPowerAt grid squareSize) [(x, y) | x <- [1..size-(squareSize-1)], y <- [1..size-(squareSize-1)]]
 
+maxPower'''' :: Int -> Grid -> Int -> [(Coord, Power)]
+maxPower'''' size grid squareSize = 
+  map (totalPowerAt grid squareSize) [(x, y) | x <- [1..size-(squareSize-1)], y <- [1..size-(squareSize-1)]]
+
 -- Using summed area values, rather than nominal power, in the Grid
 fuelCellGrid' :: Serial -> Int -> Grid
 fuelCellGrid' serialNumber size =
-  foldl chargeAt' zeroedEdges [(col, row) | col <- [1..size], row <- [1..size]]
+  foldl powerAt' zeroedEdges [(col, row) | col <- [1..size], row <- [1..size]]
   where
     zeroedEdges = foldl zero (insert (0, 0) 0 empty) coords
       where
         coords = [(col,0) | col <- [1..size]] ++ [(0, row) | row <- [1..size]]
         zero g c = insert c 0 g
-    chargeAt' grid coord@(x, y) = insert coord powerLevel grid
+    powerAt' grid coord@(x, y) = insert coord powerLevel grid
         where
-          powerLevel = chargeAt serialNumber coord + grid ! (x, y -  1) +
+          powerLevel = powerAt serialNumber coord + grid ! (x, y -  1) +
                        grid ! (x-1, y) - grid ! (x -1, y - 1)
 
 totalPowerAt' :: Serial -> Int -> Int -> Coord -> (Coord, Power)
@@ -63,15 +67,22 @@ maxPower' serialNumber size squareSize =
   map (totalPowerAt' serialNumber size squareSize) 
     [(x, y) | x <- [1..size-(squareSize-1)], y <- [1..size-(squareSize-1)]]
 
+maxPower'' :: Serial -> Int -> Int -> [(Coord, Power)]
+maxPower'' serialNumber size squareSize = 
+  map (totalPowerAt' serialNumber size squareSize) 
+    [(x, y) | x <- [1..size-(squareSize-1)], y <- [1..size-(squareSize-1)]]
+
 
 main :: IO()
 main = do
   -- Examples
-  print $ chargeAt 57 (122, 79)
-  print $ chargeAt 39 (217, 196)
-  print $ chargeAt 71 (101, 153)
+  print $ powerAt 57 (122, 79)
+  print $ powerAt 39 (217, 196)
+  print $ powerAt 71 (101, 153)
 
   print $ maxPower gridSize (fuelCellGrid 18 gridSize) 3
+  print $ take 20 $ maxPower'''' gridSize (fuelCellGrid 18 gridSize) 3
+  print $ maxPower'' 18 gridSize 3
   print $ maxPower' 18 gridSize 3
   print $ maxPower gridSize (fuelCellGrid 42 gridSize) 3
   print $ maxPower' 42 gridSize 3
