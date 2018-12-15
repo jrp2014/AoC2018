@@ -1,48 +1,55 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module Main where
 
-import qualified Data.Sequence as Seq
-
-type Recipe = Int
-
-type Recipes = Seq.Seq Recipe
+import Data.Char (digitToInt)
+import Data.List (isPrefixOf, tails)
+import qualified Data.Sequence as S
 
 type Score = Int
 
-type Scores = Seq.Seq Score
+type Index = Int
 
-data ScoreBoard = ScoreBoard
-  { recipe1, recipe2 :: Recipe
-  , scores :: Scores
-  }
+data Recipes =
+  Recipes Index
+          Index
+          (S.Seq Score)
+  deriving (Show, Eq)
 
-newScoreBoard :: ScoreBoard -> (Recipes, ScoreBoard)
-newScoreBoard ScoreBoard {..} =
-  (recipies, ScoreBoard newRecipe1 newRecipe2 newScores)
+-- laziy list of chcolate practice recipe numbers
+newRecipes :: [Score]
+newRecipes = 3 : 7 : newRecipes' (Recipes 0 1 (S.fromList [3, 7]))
   where
-    newRecipe1 = (recipe1 + score1 + 1) `mod` Seq.length newScores
-    newRecipe2 = (recipe2 + score2 + 1) `mod` Seq.length newScores
-    score1 = scores `Seq.index` recipe1
-    score2 = scores `Seq.index` recipe2
-    recipies = newRecipes recipe1 recipe2
-    newScores = scores <> recipies
+    newRecipes' :: Recipes -> [Score]
+    newRecipes' (Recipes elf1 elf2 scores) =
+      newDigits ++ newRecipes' (Recipes elf1' elf2' scores')
+      where
+        scores' = scores S.>< S.fromList newDigits
+        score1 = scores `S.index` elf1
+        score2 = scores `S.index` elf2
+        newDigits = toDigits (score1 + score2)
+        length' = S.length scores'
+        elf1' = (elf1 + 1 + score1) `mod` length'
+        elf2' = (elf2 + 1 + score2) `mod` length'
 
-newRecipes :: Recipe -> Recipe -> Recipes
-newRecipes r1 r2
-  | a == 0 = Seq.singleton b
-  | otherwise = Seq.fromList [a, b]
-  where
-    (a, b) = divMod (r1 + r2) 10
+toDigits :: Int -> [Int]
+toDigits = map digitToInt . show
 
-process :: Recipes
-process =
-  Seq.empty Seq.|> 3 Seq.|> 7 Seq.|>
-  process' (ScoreBoard 0 1 (Seq.fromList [3, 7]))
-  where
-    process' = rs Seq.>< process' sb
-    (rs, sb) = newScoreBoard
+input :: Int
+input = 440231
+
+solve1 :: Int -> String
+solve1 n = concatMap show $ take 10 $ drop n newRecipes
+
+solve2 :: Int -> Int
+solve2 n =
+  length . takeWhile (not . (toDigits n `isPrefixOf`)) . tails $ newRecipes
 
 main :: IO ()
 main = do
-  undefined
+  print $ solve1 9
+  print $ solve1 5
+  print $ solve1 18
+  print $ solve1 2018
+  -- Part 1
+  print $ solve1 input
+  -- Part 2
+  print $ solve2 input
