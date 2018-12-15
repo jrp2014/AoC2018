@@ -49,11 +49,13 @@ fuelCellGrid' serialNumber size =
 
 totalPowerAt' :: Serial -> Int -> Int -> Coord -> (Coord, Power)
 totalPowerAt' serialNumber size squareSize c@(x0, y0) = (c,
-  grid' ! (x1, y1) + grid' ! (x0, y0) - grid' ! (x1, y0) - grid' ! (x0, y1))
+  grid' ! (x1', y1') + grid' ! (x0', y0') - grid' ! (x1', y0') - grid' ! (x0', y1'))
   where
     grid' = fuelCellGrid' serialNumber size
-    x1 = x0 + squareSize - 1
-    y1 = y0 + squareSize - 1
+    x0' = x0 - 1
+    y0' = y0 - 1
+    x1' = x0' + squareSize
+    y1' = y0' + squareSize
 
 maxPower' :: Serial -> Int -> Int -> (Coord, Power)
 maxPower' serialNumber size squareSize = 
@@ -70,9 +72,9 @@ main = do
   print $ chargeAt 71 (101, 153)
 
   print $ maxPower gridSize (fuelCellGrid 18 gridSize) 3
-  -- print $ maxPower' 18 gridSize 3
+  print $ maxPower' 18 gridSize 3
   print $ maxPower gridSize (fuelCellGrid 42 gridSize) 3
-  -- print $ maxPower' 42 gridSize 3
+  print $ maxPower' 42 gridSize 3
 
   let g = fuelCellGrid 57 gridSize
   print $ totalPowerAt g 3 (122, 79)
