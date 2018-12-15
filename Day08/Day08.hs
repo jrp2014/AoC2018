@@ -5,7 +5,7 @@ import Data.Maybe (mapMaybe)
 import qualified Text.Parsec as P
 
 -- Parse the input to a list of Int
--- This is necessaruy to drive the parse
+-- This is necessary to drive the parse
 type Summed = P.Parsec [Int] () Int
 
 ex1 :: String
