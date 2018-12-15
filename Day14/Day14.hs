@@ -1,7 +1,7 @@
 module Main where
 
-import Data.Char (digitToInt)
-import Data.List (isPrefixOf, tails)
+import           Data.Char     (digitToInt)
+import           Data.List     (isPrefixOf, tails)
 import qualified Data.Sequence as S
 
 type Score = Int
@@ -14,7 +14,7 @@ data Recipes =
           (S.Seq Score)
   deriving (Show, Eq)
 
--- laziy list of chcolate practice recipe numbers
+-- lazy list of chocolate practice recipe numbers
 newRecipes :: [Score]
 newRecipes = 3 : 7 : newRecipes' (Recipes 0 1 (S.fromList [3, 7]))
   where
@@ -39,6 +39,7 @@ input = 440231
 solve1 :: Int -> String
 solve1 n = concatMap show $ take 10 $ drop n newRecipes
 
+-- TODO:: This works, but is slow. Find a faster algorithm.
 solve2 :: Int -> Int
 solve2 n =
   length . takeWhile (not . (toDigits n `isPrefixOf`)) . tails $ newRecipes
