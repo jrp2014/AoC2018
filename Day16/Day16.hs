@@ -3,7 +3,9 @@ module Main where
 import Data.Bits ((.&.), (.|.))
 import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap, (!))
-import Data.List (intersect)
+import Data.List (foldl', intersect)
+import Control.Monad (foldM)
+import Data.Maybe (fromJust)
 
 data Instruction = Instruction
   { opCode, inputA, inputB, outputC :: Int
@@ -98,9 +100,26 @@ findMatches s =
   where
     instr = instruction s
 
-findConsistentMatches :: [Sample] -> Candidates
-findConsistentMatches samples =
+findAllMatches :: [Sample] -> Candidates
+findAllMatches samples =
   IntMap.fromListWith intersect (map findMatches samples)
+
+findConsistentMatches :: Candidates -> IntMap Semantics
+findConsistentMatches candidates = fmap (\name -> fromJust (lookup name opCodes)) nameMap
+  where
+    -- nameMap :: IntMap Candidates -> IntMap (String, Semantics)
+    [nameMap] = foldM pick IntMap.empty (IntMap.toList candidates)
+
+findConsistentMatches' :: Candidates -> IntMap String
+findConsistentMatches' candidates = nameMap
+  where
+    -- nameMap :: IntMap Candidates -> IntMap (String, Semantics)
+    [nameMap] = foldM pick IntMap.empty (IntMap.toList candidates)
+
+--pick :: Candidates -> (Int, [[String]]) -> [Candidates]
+pick :: IntMap String -> (Int, [String]) -> [IntMap String]
+pick assigned (op, unassigned) = [ IntMap.insert op picked assigned | picked <- unassigned, picked `notElem` assigned]
+
 
 parsePart1 :: String -> [Sample]
 parsePart1 input = parseBlocks linput
@@ -128,10 +147,28 @@ parseSample bs insts as =
         insts ++
       "]"
 
+parsePart2 :: String -> [Instruction]
+parsePart2 s = map toInstruction rwords
+  where
+    llines = lines s
+    lwords = map words llines
+    rwords = map (map read) lwords
+    toInstruction [op, a, b, c] = Instruction op a b c
+
 solve1 :: String -> Int
 solve1 input = length $ filter (>=3) (map length candidates)
    where
      candidates = map (snd . findMatches) (parsePart1 input)
+
+execute :: IntMap Semantics -> Registers -> Instruction -> Registers
+execute semantics registers (Instruction op a b c) = (semantics IntMap.! op) a b c registers
+
+solve2 :: String -> String -> Int
+solve2 observations program  = finalRegisters ! 0
+  where
+    instructions = parsePart2 program
+    semantics = findConsistentMatches . findAllMatches . findMatches  $ parsePart1 observations
+    finalRegisters = foldl' execute (loadRegisters [0,0,0,0]) instructions
 
 --assignments :: Candidates -> Assignments
 main :: IO ()
@@ -142,8 +179,10 @@ main = do
           (Instruction 9 2 1 2)
           (loadRegisters [3, 2, 2, 1])
   print $ findMatches sample
-  print $ findConsistentMatches [sample]
+  print $ findAllMatches [sample]
   print $ parseSample "Before: [3, 2, 1, 1]" "9 2 1 2" "After:  [3, 2, 2, 1]"
   input <- readFile "input1.txt"
   putStrLn "Part 1"
   print $ solve1 input
+  print $ findAllMatches (parsePart1 input)
+  print $ findConsistentMatches' $ findAllMatches $ parsePart1 input
