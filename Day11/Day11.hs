@@ -76,15 +76,18 @@ maxPower'' serialNumber size squareSize =
 main :: IO()
 main = do
   -- Examples
+  putStrLn "Examples: "
   print $ powerAt 57 (122, 79)
   print $ powerAt 39 (217, 196)
   print $ powerAt 71 (101, 153)
 
-  print $ maxPower gridSize (fuelCellGrid 18 gridSize) 3
+  putStrLn "maxPower 18 intermediates in direct and summed area versions" 
   print $ take 20 $ maxPower'''' gridSize (fuelCellGrid 18 gridSize) 3
-  print $ maxPower'' 18 gridSize 3
-  print $ maxPower' 18 gridSize 3
+  print $ take 20 $ maxPower'' 18 gridSize 3
+  putStrLn "maxPower 42 in direct and summed area versions" 
   print $ maxPower gridSize (fuelCellGrid 42 gridSize) 3
+  print $ maxPower' 42 gridSize 3
+
   print $ maxPower' 42 gridSize 3
 
   let g = fuelCellGrid 57 gridSize
