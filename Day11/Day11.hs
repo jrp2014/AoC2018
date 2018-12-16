@@ -61,6 +61,8 @@ maxPower'''' size grid squareSize =
     , y <- [1 .. size - (squareSize - 1)]
     ]
 
+-- The following functions use summed area values for speed
+
 -- Using summed area values, rather than nominal power, in the Grid
 fuelCellGrid' :: Serial -> Int -> Grid
 fuelCellGrid' serialNumber size =
@@ -80,7 +82,7 @@ fuelCellGrid' serialNumber size =
           powerAt serialNumber coord + grid ! (x, y - 1) + grid ! (x - 1, y) -
           grid ! (x - 1, y - 1)
 
---totalPowerAt' :: Serial -> Int -> Int -> Coord -> (Coord, Power)
+-- This function does all the work
 totalPowerAt' :: Grid -> Int -> Coord -> (Coord, Power)
 totalPowerAt' grid squareSize c@(x0, y0) =
   ( c
