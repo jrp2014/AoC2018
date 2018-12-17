@@ -1,8 +1,6 @@
 module Main where
 
-
 -- TODO: works,but types are a bit untidy
-
 import Control.Monad (foldM)
 import Data.Bits ((.&.), (.|.))
 import qualified Data.IntMap as IntMap
@@ -25,75 +23,56 @@ type Registers = IntMap Int
 loadRegisters :: [Int] -> Registers
 loadRegisters = IntMap.fromList . zip [0, 1, 2, 3]
 
-type Semantics = Int -> Int -> Int -> Registers -> Registers
+data OpCode = Oaddr | Oaddi
+            | Omulr | Omuli
+            | Obanr | Obani
+            | Oborr | Obori
+            | Osetr | Oseti
+            | Ogtir | Ogtri | Ogtrr
+            | Oeqir | Oeqri | Oeqrr
+  deriving (Show, Eq, Ord, Enum, Bounded)
 
-type Candidates = IntMap [String]
+type Microcode = Int -> Int -> Int -> Registers -> Registers
 
-type Assignments = IntMap Semantics
+type Candidates = IntMap [OpCode]
 
-opCodes :: [(String, Semantics)]
-opCodes =
-  [ ("addr", \a b c regs -> IntMap.insert c (regs ! a + regs ! b) regs)
-  , ("addi", \a b c regs -> IntMap.insert c (regs ! a + b) regs)
-  , ("mulr", \a b c regs -> IntMap.insert c (regs ! a * regs ! b) regs)
-  , ("muli", \a b c regs -> IntMap.insert c (regs ! a * b) regs)
-  , ("banr", \a b c regs -> IntMap.insert c (regs ! a .&. regs ! b) regs)
-  , ("bani", \a b c regs -> IntMap.insert c (regs ! a .&. b) regs)
-  , ("borr", \a b c regs -> IntMap.insert c (regs ! a .|. regs ! b) regs)
-  , ("bori", \a b c regs -> IntMap.insert c (regs ! a .|. b) regs)
-  , ("setr", \a _ c regs -> IntMap.insert c (regs ! a) regs)
-  , ("seti", \a _ c regs -> IntMap.insert c a regs)
-  , ( "gtir"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if a > regs ! b
-             then 1
-             else 0)
-          regs)
-  , ( "gtri"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if regs ! a > b
-             then 1
-             else 0)
-          regs)
-  , ( "gtrr"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if regs ! a > regs ! b
-             then 1
-             else 0)
-          regs)
-  , ( "eqir"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if a == regs ! b
-             then 1
-             else 0)
-          regs)
-  , ( "eqri"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if regs ! a == b
-             then 1
-             else 0)
-          regs)
-  , ( "eqrr"
-    , \a b c regs ->
-        IntMap.insert
-          c
-          (if regs ! a == regs ! b
-             then 1
-             else 0)
-          regs)
-  ]
+type Assignments = IntMap Microcode
 
-findMatches :: Sample -> (Int, [String])
+opCodes :: [(OpCode, Microcode)]
+opCodes
+  = [ (Oaddr, \a b c regs -> IntMap.insert c (regs ! a + regs ! b) regs)
+    , (Oaddi, \a b c regs -> IntMap.insert c (regs ! a + b) regs)
+    , (Omulr, \a b c regs -> IntMap.insert c (regs ! a * regs ! b) regs)
+    , (Omuli, \a b c regs -> IntMap.insert c (regs ! a * b) regs)
+    , (Obanr, \a b c regs -> IntMap.insert c (regs ! a .&. regs ! b) regs)
+    , (Obani, \a b c regs -> IntMap.insert c (regs ! a .&. b) regs)
+    , (Oborr, \a b c regs -> IntMap.insert c (regs ! a .|. regs ! b) regs)
+    , (Obori, \a b c regs -> IntMap.insert c (regs ! a .|. b) regs)
+    , (Osetr, \a _ c regs -> IntMap.insert c (regs ! a) regs)
+    , (Oseti, \a _ c regs -> IntMap.insert c a regs)
+    , ( Ogtir
+      , \a b c regs -> IntMap.insert c (if a > regs ! b then 1 else 0) regs
+      )
+    , ( Ogtri
+      , \a b c regs -> IntMap.insert c (if regs ! a > b then 1 else 0) regs
+      )
+    , ( Ogtrr
+      , \a b c regs ->
+        IntMap.insert c (if regs ! a > regs ! b then 1 else 0) regs
+      )
+    , ( Oeqir
+      , \a b c regs -> IntMap.insert c (if a == regs ! b then 1 else 0) regs
+      )
+    , ( Oeqri
+      , \a b c regs -> IntMap.insert c (if regs ! a == b then 1 else 0) regs
+      )
+    , ( Oeqrr
+      , \a b c regs ->
+        IntMap.insert c (if regs ! a == regs ! b then 1 else 0) regs
+      )
+    ]
+
+findMatches :: Sample -> (Int, [OpCode])
 findMatches s =
   ( opCode instr
   , [ name
@@ -106,21 +85,21 @@ findMatches s =
 findAllMatches :: [Sample] -> Candidates
 findAllMatches samples = IntMap.fromListWith intersect (map findMatches samples)
 
-findConsistentMatches :: Candidates -> IntMap Semantics
+findConsistentMatches :: Candidates -> IntMap Microcode
 findConsistentMatches candidates =
   fmap (\name -> fromJust (lookup name opCodes)) nameMap
-    -- nameMap :: IntMap Candidates -> IntMap (String, Semantics)
+    -- nameMap :: IntMap Candidates -> IntMap (String, Microcode)
   where
     [nameMap] = foldM pick IntMap.empty (IntMap.toList candidates)
 
-findConsistentMatches' :: Candidates -> IntMap String
+findConsistentMatches' :: Candidates -> IntMap OpCode
 findConsistentMatches' candidates = nameMap
-    -- nameMap :: IntMap Candidates -> IntMap (String, Semantics)
+    -- nameMap :: IntMap Candidates -> IntMap (String, Microcode)
   where
     [nameMap] = foldM pick IntMap.empty (IntMap.toList candidates)
 
 --pick :: Candidates -> (Int, [[String]]) -> [Candidates]
-pick :: IntMap String -> (Int, [String]) -> [IntMap String]
+pick :: IntMap OpCode -> (Int, [OpCode]) -> [IntMap OpCode]
 pick assigned (op, unassigned) =
   [ IntMap.insert op picked assigned
   | picked <- unassigned
@@ -142,23 +121,11 @@ parseSample bs insts as =
     (Instruction op a b c)
     (loadRegisters (read $ drop 8 as))
   where
-    [op, a, b, c] =
-      read $
-      '[' :
-      map
-        (\ch ->
-           if ch == ' '
-             then ','
-             else ch)
-        insts ++
-      "]"
+    [op, a, b, c] = map read (words insts)
 
 parsePart2 :: String -> [Instruction]
-parsePart2 s = map toInstruction rwords
+parsePart2 s = map (toInstruction . map read . words) $ lines s
   where
-    llines = lines s
-    lwords = map words llines
-    rwords = map (map read) lwords
     toInstruction [op, a, b, c] = Instruction op a b c
 
 solve1 :: String -> Int
@@ -166,17 +133,17 @@ solve1 input = length $ filter (>= 3) (map length candidates)
   where
     candidates = map (snd . findMatches) (parsePart1 input)
 
-execute :: IntMap Semantics -> Registers -> Instruction -> Registers
-execute semantics registers (Instruction op a b c) =
-  (semantics IntMap.! op) a b c registers
+execute :: IntMap Microcode -> Registers -> Instruction -> Registers
+execute microcode registers (Instruction op a b c) =
+  (microcode IntMap.! op) a b c registers
 
 solve2 :: String -> String -> Int
 solve2 observations program = finalRegisters ! 0
   where
     instructions = parsePart2 program
-    semantics = findConsistentMatches . findAllMatches $ parsePart1 observations
+    microcode = findConsistentMatches . findAllMatches $ parsePart1 observations
     finalRegisters =
-      foldl' (execute semantics) (loadRegisters [0, 0, 0, 0]) instructions
+      foldl' (execute microcode) (loadRegisters [0, 0, 0, 0]) instructions
 
 --assignments :: Candidates -> Assignments
 main :: IO ()
