@@ -97,8 +97,7 @@ findMatches s =
     instr = instruction s
 
 findAllMatches :: [Sample] -> Candidates
-findAllMatches samples =
-  IntMap.fromListWith S.intersection (map findMatches samples)
+findAllMatches = IntMap.fromListWith S.intersection . map findMatches
 
 findConsistentMatches :: Candidates -> IntMap Microcode
 findConsistentMatches candidates =
