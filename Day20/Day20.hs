@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications, ViewPatterns #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Main where
 
@@ -16,6 +16,8 @@ type Coord = (Int, Int)
 
 type Room = Int
 
+type RoomMap = Map Coord Room
+
 mkGraph :: String -> UGr
 mkGraph input = mkUGraph (elems rooms) doors
   where
@@ -24,11 +26,11 @@ mkGraph input = mkUGraph (elems rooms) doors
 
 mkGraph' ::
      [Coord]
-  -> Map Coord Room
+  -> RoomMap
   -> [(Room, Room)]
   -> Coord
   -> String
-  -> (Map Coord Room, [Coord])
+  -> (RoomMap, [Coord])
 mkGraph' stack rooms doors coord ('(':directions) =
   mkGraph' (coord : stack) rooms doors coord directions
 mkGraph' stack@(coord:_) rooms doors _ ('|':directions) =
@@ -65,6 +67,9 @@ ex4 = "^ESSWWN(E|NNENN(EESS(WNSE|)SSS|WWWSSSSE(SW|NNNE)))$"
 ex5 :: String
 ex5 = "^WSSEESWWWNW(S|NENNEEEENN(ESSSSW(NWSW|SSEN)|WSWWN(E|WWS(E|SS))))$"
 
+-- solving entails making a graph of the rooms (vertices) and doors (edges)
+-- level does a breadth first search of the graph, generating a list of room
+-- and the length of the path to them tuples, from which the problem can be solved.
 solve1 :: String -> Int
 solve1 = maximum . fmap snd . level 0 . mkGraph
 
