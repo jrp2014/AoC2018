@@ -4,7 +4,6 @@ module Main where
 
 import           Data.Char                      ( isDigit )
 import qualified Data.Set                      as S
-import qualified Data.Map                      as M
 import           Data.Semigroup
 
 type Position = (Int, Int)
@@ -98,7 +97,8 @@ skySignatures :: Sky -> [(Int, Int)]
 skySignatures sky = [ (t, skySignature sky t) | t <- [0 ..] ]
 
 skySignatures' :: Sky -> [(Int, Int)]
-skySignatures' sky = [ (t, skySignature sky t) | n <- [0 ..], let t = 2 ^ n ]
+skySignatures' sky =
+  [ (t, skySignature sky t) | n <- [0 ..] :: [Int], let t = 2 ^ n ]
 
 secant :: (Integral t) => t -> (t -> t) -> t -> t -> t
 secant epsilon f guess1 guess0 =
@@ -109,12 +109,15 @@ secant epsilon f guess1 guess0 =
 
 
 
-solve1 :: Sky -> String
-solve1 sky = display $ newSky bestT sky
+solve1 :: Sky -> (Int, String)
+solve1 sky = (bestT, display $ newSky bestT sky)
  where
   (t0, b0) = head $ skySignatures sky
   (ts, bs) = head $ dropWhile ((< b0) . snd) $ skySignatures' sky -- first boundingBox bigger than where we started
 
+  -- Could use a better initial guess, such as
+  -- ts - bs * (ts - t0) `div` (bs -b0) instead of t0 or ts, but the result is
+  -- instantaneous as it is
   bestT    = secant 1 (skySignature sky) t0 ts
 
 
@@ -124,8 +127,11 @@ main = do
   putStrLn . display $ newSky 3 (parse ex1)
   --print . take 10 $ skySignatures (parse ex1)
   --print . take 10 $ skySignatures' (parse ex1)
-  putStrLn $ solve1 (parse ex1)
+  print $ solve1 (parse ex1)
   -- Part 1
   input <- readFile "input.txt"
-  let linput = lines input
-  putStrLn $ solve1 (parse linput)
+  let linput          = lines input
+  let (bestT, result) = solve1 (parse linput)
+  putStrLn result
+  -- Part 2
+  print bestT
