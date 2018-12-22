@@ -70,7 +70,8 @@ boundingBox ps = ((xMin, yMin), (xMax, yMax))
     flip foldMap ps $ \(x, y) -> (Min x, Min y, Max x, Max y)
 
 boundingBoxArea :: Foldable f => f Position -> Int
-boundingBoxArea (boundingBox -> ((xMin, yMin), (xMax, yMax))) = (xMax-xMin) * (yMax -yMin)
+boundingBoxArea (boundingBox -> ((xMin, yMin), (xMax, yMax))) =
+  (xMax - xMin) * (yMax - yMin)
 
 display :: Sky -> String
 display points = unlines
@@ -82,17 +83,49 @@ display points = unlines
   positions                    = S.map position points
 
 newPoint :: Int -> Point -> Point
-newPoint t pt@Point{..} = pt { position = (x + vx * t, y + vy * t) }
-  where
-    (x, y) = position
-    (vx, vy) = velocity
+newPoint t pt@Point {..} = pt { position = (x + vx * t, y + vy * t) }
+ where
+  (x , y ) = position
+  (vx, vy) = velocity
 
 newSky :: Int -> Sky -> Sky
 newSky t = S.map (newPoint t)
 
+skySignature :: Sky -> Int -> Int
+skySignature sky t = boundingBoxArea $ S.map position (newSky t sky)
+
+skySignatures :: Sky -> [(Int, Int)]
+skySignatures sky = [ (t, skySignature sky t) | t <- [0 ..] ]
+
+skySignatures' :: Sky -> [(Int, Int)]
+skySignatures' sky = [ (t, skySignature sky t) | n <- [0 ..], let t = 2 ^ n ]
+
+secant :: (Integral t) => t -> (t -> t) -> t -> t -> t
+secant epsilon f guess1 guess0 =
+  let newGuess =
+          guess1 - f guess1 * (guess1 - guess0) `div` (f guess1 - f guess0)
+      err = abs (newGuess - guess1)
+  in  if err < epsilon then newGuess else secant epsilon f newGuess guess1
+
+
+
+solve1 :: Sky -> String
+solve1 sky = display $ newSky bestT sky
+ where
+  (t0, b0) = head $ skySignatures sky
+  (ts, bs) = head $ dropWhile ((< b0) . snd) $ skySignatures' sky -- first boundingBox bigger than where we started
+
+  bestT    = secant 1 (skySignature sky) t0 ts
 
 
 main :: IO ()
 main = do
   putStrLn $ display (parse ex1)
   putStrLn . display $ newSky 3 (parse ex1)
+  --print . take 10 $ skySignatures (parse ex1)
+  --print . take 10 $ skySignatures' (parse ex1)
+  putStrLn $ solve1 (parse ex1)
+  -- Part 1
+  input <- readFile "input.txt"
+  let linput = lines input
+  putStrLn $ solve1 (parse linput)
