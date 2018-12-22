@@ -98,7 +98,7 @@ skySignatures sky = [ (t, skySignature sky t) | t <- [0 ..] ]
 
 skySignatures' :: Sky -> [(Int, Int)]
 skySignatures' sky =
-  [ (t, skySignature sky t) | n <- [0 ..] :: [Int], let t = 2 ^ n ]
+  [ (t, skySignature sky t) | n <- [0 ..] :: [Int], let t = 2 ^ n  :: Int]
 
 secant :: (Integral t) => t -> (t -> t) -> t -> t -> t
 secant epsilon f guess1 guess0 =
