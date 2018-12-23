@@ -46,6 +46,7 @@ cleanLine = map (\c -> if isDigit c || c == '-' then c else ' ')
 manhattan :: Coord -> Coord -> Int
 manhattan (a, b) (c, d) = abs (a - c) + abs (b - d)
 
+-- the closest coordinate to c from cs
 closest :: Coord -> Coords -> Maybe Coord
 closest c cs = case closests of
   [(coord, _)] : _ -> Just coord -- there is only 1 closest
@@ -62,6 +63,10 @@ biggestArea coords =
   removeEdges = filter isNotEdge
   isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
   ((xMin, yMin), (xMax, yMax)) = boundingBox coords
+
+totalDistance :: Coord -> Coords -> Int
+totalDistance c = sum . map  (manhattan c) 
+
 
 main :: IO ()
 main = do
