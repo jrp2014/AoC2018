@@ -60,6 +60,8 @@ biggestArea coords =
   maximum . map length . group . sort . removeEdges $ catMaybes
     [ closest (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
  where
+  -- TODO:  Should we remove areas that include an edge rather that removing
+  -- rather than just the edge points themselves?
   removeEdges = filter isNotEdge
   isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
   ((xMin, yMin), (xMax, yMax)) = boundingBox coords
