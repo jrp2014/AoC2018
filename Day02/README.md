@@ -1,7 +1,7 @@
 # Benchmarking results
 
 Compared to Bartosz Milewski's (superior) [Open Season on
-Hylomorphisms][https://bartoszmilewski.com/2018/12/20/open-season-on-hylomorphisms/]
+Hylomorphisms](https://bartoszmilewski.com/2018/12/20/open-season-on-hylomorphisms/)
 version.
 
     Day02$ ghc -O2 Day02+.hs -package criterion
