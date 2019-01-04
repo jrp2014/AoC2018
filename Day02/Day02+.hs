@@ -9,9 +9,10 @@
 module Main where
 
 import           GHC.Exts                       ( groupWith )
-import qualified Data.Map                      as M
+import qualified Data.Map.Strict                as M
 import           Criterion.Main
 import           Data.List                      ( tails
+                                                , foldl'
                                                 , sortOn
                                                 )
 import           Data.List.Unique               ( occurrences )
@@ -26,7 +27,7 @@ main :: IO ()
 main = defaultMain
   [ env setupEnv $ \cs -> bgroup
     "Bartosz Milewski"
-    [ bench "checkSum (Part 1)" $ nf checkSum cs
+    [ bench "checkSum (Part 1):" $ nf checkSum cs
     , bench "Brute force (Part 2):" $ nf findMatch cs
     , bench "Using Trie (Part 2):" $ nf findMatch1 cs
     , bench "Using hylo (Part 2):" $ nf (head . snd . hylo accum fromList) cs
@@ -43,7 +44,7 @@ main = defaultMain
 checkSum :: [String] -> Int
 checkSum cs =
   let xs             = fmap twoThree cs
-      (twos, threes) = foldl
+      (twos, threes) = foldl'
         (\(x, x') (b, b') -> (x + fromBool b, x' + fromBool b'))
         (0, 0)
         xs
@@ -57,7 +58,7 @@ add :: Ord a => Counts a -> a -> Counts a
 add cs c = M.insertWith (+) c 1 cs
 
 charCounts :: String -> Counts Char
-charCounts s = foldl add M.empty s
+charCounts s = foldl' add M.empty s
 
 twoThree :: String -> (Bool, Bool)
 twoThree s = let xs = M.elems (charCounts s) in (2 `elem` xs, 3 `elem` xs)
@@ -93,7 +94,7 @@ insertS (Trie bs) s  = Trie (inS bs s)
   inS [] (c : cs) = [(c, 1, insertS (Trie []) cs)]
 
 mkTrie :: [String] -> Trie
-mkTrie = foldl insertS (Trie [])
+mkTrie = foldl' insertS (Trie [])
 
 match1 :: Trie -> [String]
 match1 (Trie bs) = go bs
@@ -177,7 +178,7 @@ accum (TrieF bs) = -- b :: (Char, ([String], [String]))
       (ss1, ss2) = both concat pss
       -- find duplicates
       ss         = concatMap (fst . snd) bs
-      mset       = foldl add M.empty ss
+      mset       = foldl' add M.empty ss
       dups       = M.keys $ M.filter (> 1) mset
   in  (ss1, dups ++ ss2)
  where
@@ -192,7 +193,7 @@ both f (x, y) = (f x, f y)
  -}
 
 solve1 :: [String] -> Int
-solve1 = sumTuples . map (foldl incCount (0, 0) . occurrences)
+solve1 = sumTuples . map (foldl' incCount (0, 0) . occurrences)
 
 incCount :: (Int, Int) -> (Int, [a]) -> (Int, Int)
 incCount (twos, threes) (2, _) = (twos + 1, threes)
