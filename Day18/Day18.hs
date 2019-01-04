@@ -62,10 +62,12 @@ ex1 =
   , "...#.|..|."
   ]
 
---parse :: [String] -> Landscape
---parse ls =  map untangle (zip [1..] (map parseLine ls))
-parse ls = map (\(y, xrow) -> map (\(x, a) -> ((x, y), a)) xrow)
-               (zip [1 ..] (map parseLine ls))
+-- This is a more general parser than is strictly necessary; it doesn't need
+-- rwos to be of the same length
+parse :: [String] -> Landscape
+parse ls = M.fromList $ concatMap
+  (\(x, xrow) -> map (\(y, a) -> ((x, y), a)) xrow)
+  (zip [1 ..] (map parseLine ls))
  where
   parseLine l = zip [1 ..] (map parseCh l)
 
@@ -73,7 +75,13 @@ parse ls = map (\(y, xrow) -> map (\(x, a) -> ((x, y), a)) xrow)
   parseCh '|' = Trees
   parseCh '#' = Lumberyard
 
-  untangle (y, xrow) = map (\(x, a) -> ((x, y), a)) xrow
+display :: Landscape -> [String]
+display = (map displayAcre) . M.toAscList
+  where
+    displayAcre (c, Open) = "." 
+    displayAcre (c, Trees) = "|" 
+    displayAcre (c, Lumberyard) = "#" 
+
 
 main :: IO ()
 main = undefined
