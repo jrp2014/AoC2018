@@ -28,6 +28,7 @@ neighbourCount :: Acre -> Landscape -> Coord -> Int
 neighbourCount acre landscape =
   length . mapMaybe (mfilter (== acre) . (`M.lookup` landscape)) . neighbours
 
+-- TODO:: actually transform
 transform :: Landscape -> Landscape
 transform lands = M.mapWithKey change lands
   where
@@ -94,4 +95,6 @@ display ls =  unlines . display' $ concatMap displayAcre (M.toAscList ls)
     displayAcre (_, Lumberyard) = "#"
 
 main :: IO ()
-main = undefined
+main = do
+  putStrLn . display $ parse ex1
+  putStrLn .display $ head $ take 10 $ iterate transform (parse ex1)
