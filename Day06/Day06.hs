@@ -1,20 +1,22 @@
 module Main where
 
 import           Data.Char                      ( isDigit )
-import           Data.Semigroup                 ( Min(..)
-                                                , Max(..)
-                                                )
-import           Data.Maybe                     ( catMaybes )
-import           Data.List                      ( groupBy
-                                                , sortBy
+import           Data.List                      ( group
                                                 , sort
-                                                , group
+                                                , sortOn
                                                 )
-import           Data.Function                  ( on )
+import           Data.Semigroup                 ( Max(..)
+                                                , Min(..)
+                                                )
 
 type Coord = (Int, Int)
+
 type Coords = [Coord]
+
 type Distance = Int
+
+type Distances = [(Distance, Coord)]
+
 type BoundingBox = (Coord, Coord)
 
 -- NE and SW coordinates of boulding box
@@ -46,33 +48,48 @@ cleanLine = map (\c -> if isDigit c || c == '-' then c else ' ')
 manhattan :: Coord -> Coord -> Int
 manhattan (a, b) (c, d) = abs (a - c) + abs (b - d)
 
+distances :: Coord -> Coords -> Distances
+distances coord = map (\c -> (manhattan coord c, c))
+
 -- the closest coordinate to c from cs
-closest :: Coord -> Coords -> Maybe Coord
-closest c cs = case closests of
-  [(coord, _)] : _ -> Just coord -- there is only 1 closest
-  _                -> Nothing
- where
-  closests = groupBy ((==) `on` snd)
-    $ sortBy (compare `on` snd) [ (coord, manhattan c coord) | coord <- cs ]
+closest :: Coord -> Coords -> Coord
+closest c cs = snd . head . sortOn fst $ distances c cs
 
 biggestArea :: Coords -> Int
 biggestArea coords =
-  maximum . map length . group . sort . removeEdges $ catMaybes
-    [ closest (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
- where
+  maximum
+    . map length
+    . group
+    . sort
+    . removeEdges
+    $ [ closest (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
   -- TODO:  Should we remove areas that include an edge rather that removing
   -- rather than just the edge points themselves?
+ where
   removeEdges = filter isNotEdge
   isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
   ((xMin, yMin), (xMax, yMax)) = boundingBox coords
 
-totalDistance :: Coord -> Coords -> Int
-totalDistance c = sum . map  (manhattan c) 
+totalDistance :: Coord -> Coords -> Distance
+totalDistance c = sum . map (manhattan c)
 
+safeArea :: Int -> Coords -> Int
+safeArea limit coords =
+  maximum
+    . map length
+    . group
+    . sort
+    . removeEdges
+    $ [ distances (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
+  -- TODO:  Should we remove areas that include an edge rather that removing
+  -- rather than just the edge points themselves?
+ where
+  removeEdges = filter isNotEdge
+  isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
+  ((xMin, yMin), (xMax, yMax)) = boundingBox coords
 
 main :: IO ()
 main = do
-  -- Example
   let pex1 = parse ex1
   putStrLn $ display pex1
   print $ biggestArea pex1
@@ -81,7 +98,8 @@ main = do
   let linput = lines input
   let pinput = parse linput
   print $ biggestArea pinput
-
+  -- Part 2
+  print $ totalDistance (4, 3) pex1
 
 ex1 :: [String]
 ex1 = ["1, 1", "1, 6", "8, 3", "3, 4", "5, 5", "8, 9"]
