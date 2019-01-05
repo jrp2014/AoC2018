@@ -10,6 +10,8 @@ import           Data.Semigroup                 ( Max(..)
                                                 , Min(..)
                                                 )
 
+-- This is brute force, but should be able to use Vornoi / Daluny
+
 type Coord = (Int, Int)
 
 type Coords = [Coord]
@@ -79,6 +81,15 @@ biggestArea coords =
 totalDistance :: Coord -> Coords -> Distance
 totalDistance c = sum . map (manhattan c)
 
+safeArea :: Int -> Coords -> Int
+safeArea limit coords = length
+  [ (x, y)
+  | x <- [xMin .. xMax]
+  , y <- [yMin .. yMax]
+  , totalDistance (x, y) coords < limit
+  ]
+  where ((xMin, yMin), (xMax, yMax)) = boundingBox coords
+
 main :: IO ()
 main = do
   let pex1 = parse ex1
@@ -90,7 +101,8 @@ main = do
   let pinput = parse linput
   print $ biggestArea pinput
   -- Part 2
-  print $ totalDistance (4, 3) pex1
+  print $ safeArea 32 pex1
+  print $ safeArea 10000 pinput
 
 ex1 :: [String]
 ex1 = ["1, 1", "1, 6", "8, 3", "3, 4", "5, 5", "8, 9"]
