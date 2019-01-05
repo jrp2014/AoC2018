@@ -5,6 +5,7 @@ import           Data.List                      ( group
                                                 , sort
                                                 , sortOn
                                                 )
+import           Data.Maybe                     ( catMaybes )
 import           Data.Semigroup                 ( Max(..)
                                                 , Min(..)
                                                 )
@@ -52,41 +53,31 @@ distances :: Coord -> Coords -> Distances
 distances coord = map (\c -> (manhattan coord c, c))
 
 -- the closest coordinate to c from cs
-closest :: Coord -> Coords -> Coord
-closest c cs = snd . head . sortOn fst $ distances c cs
+closest :: Coord -> Coords -> Maybe Coord
+closest c cs = coordIfIsUnique . sortOn fst $ distances c cs
+ where
+  coordIfIsUnique :: Distances -> Maybe Coord
+  coordIfIsUnique ((dist1, c1) : (dist2, _) : _) =
+    if dist1 == dist2 then Nothing else Just c1
+  coordIfIsUnique [(_, c1)] = Just c1
+  coordIfIsUnique []        = Nothing
 
 biggestArea :: Coords -> Int
 biggestArea coords =
-  maximum
-    . map length
-    . group
-    . sort
-    . removeEdges
+  maximum           -- return the biggest area
+    . map length    -- get the size of each area
+    . group         -- group areas of the same distance
+    . sort          -- sort (by distance (probably superfluous))
+    . dropEdges     -- if the closest coord is an edge point, drop this
+    . catMaybes     -- drops Nothings (where >1 of coords is closest)
     $ [ closest (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
-  -- TODO:  Should we remove areas that include an edge rather that removing
-  -- rather than just the edge points themselves?
  where
-  removeEdges = filter isNotEdge
+  dropEdges = filter isNotEdge
   isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
   ((xMin, yMin), (xMax, yMax)) = boundingBox coords
 
 totalDistance :: Coord -> Coords -> Distance
 totalDistance c = sum . map (manhattan c)
-
-safeArea :: Int -> Coords -> Int
-safeArea limit coords =
-  maximum
-    . map length
-    . group
-    . sort
-    . removeEdges
-    $ [ distances (x, y) coords | x <- [xMin .. xMax], y <- [yMin .. yMax] ]
-  -- TODO:  Should we remove areas that include an edge rather that removing
-  -- rather than just the edge points themselves?
- where
-  removeEdges = filter isNotEdge
-  isNotEdge (x, y) = x /= xMin && x /= xMax && y /= yMin && y /= yMax
-  ((xMin, yMin), (xMax, yMax)) = boundingBox coords
 
 main :: IO ()
 main = do
