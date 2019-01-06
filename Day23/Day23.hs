@@ -3,11 +3,13 @@ module Main where
 import Data.Char (isDigit)
 import Data.List (maximumBy)
 import Data.Ord (comparing)
+import Data.Graph.Inductive
 
 type Coord = (Int, Int, Int)
 
 data Bot = Bot
-  { pos :: Coord
+  { ix :: Int
+  , pos :: Coord
   , r :: Int
   } deriving (Show)
 
@@ -40,6 +42,12 @@ boxIntersectsBot :: BoundingBox -> Bot -> Bool
 boxIntersectsBot bb bot =
   any (bot `isInRange`) (boxBounds bb) || any (bb `isInBox`) (botBounds bot)
 
+
+-- buildGraph :: [Bot] 
+buildGraph bots = mkUGraph [1..] connectedBots
+  where
+    connectedBots = [ (botA, botB) | botA <- bots, botB <- bots, manhattan (pos botA) (pos botB) <= r botA + r botB]
+
 ex1 :: [String]
 ex1 =
   [ "pos=<0,0,0>, r=4"
@@ -54,10 +62,10 @@ ex1 =
   ]
 
 parse :: [String] -> [Bot]
-parse = map parseLine
+parse = map parseLine . zip [1..]
 
-parseLine :: String -> Bot
-parseLine l = Bot {pos = (x, y, z), r = radius}
+parseLine :: (Int, String) -> Bot
+parseLine (i, l)  = Bot {ix = i, pos = (x, y, z), r = radius}
   where
     (x, y, z, radius) = read ('(' : cleanUp l ++ ")") :: (Int, Int, Int, Int)
     cleanUp :: String -> String
