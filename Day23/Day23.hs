@@ -1,10 +1,8 @@
 module Main where
 
-import           Data.Char                      ( isDigit )
-import           Data.List                      ( maximumBy
-                                                , sort
-                                                )
-import           Data.Ord                       ( comparing )
+import Data.Char (isDigit)
+import Data.List (maximumBy)
+import Data.Ord (comparing)
 
 type Coord = (Int, Int, Int)
 
@@ -12,6 +10,35 @@ data Bot = Bot
   { pos :: Coord
   , r :: Int
   } deriving (Show)
+
+data BoundingBox = BoundingBox
+  { nw, se :: Coord
+  } deriving (Show)
+
+manhattan :: Coord -> Coord -> Int
+manhattan (a, b, c) (d, e, f) = abs (a - d) + abs (b - e) + abs (c - f)
+
+isInRange :: Bot -> Coord -> Bool
+Bot position radius `isInRange` c = manhattan position c <= radius
+
+isInBox :: BoundingBox -> Coord -> Bool
+isInBox (BoundingBox (xmin, ymin, zmin) (xmax, ymax, zmax)) (x, y, z) =
+  x >= xmin && y >= ymin && z >= zmin && xmax >= x && ymax >= y && zmax >= z
+
+botBounds :: Bot -> [Coord]
+botBounds (Bot (x, y, z) radius) =
+  [ (x + dx, y + dy, z + dz)
+  | dx <- [radius, -radius]
+  , dy <- [radius, -radius]
+  , dz <- [radius, -radius]
+  ]
+
+boxBounds :: BoundingBox -> [Coord]
+boxBounds (BoundingBox minb maxb) = [minb, maxb]
+
+boxIntersectsBot :: BoundingBox -> Bot -> Bool
+boxIntersectsBot bb bot =
+  any (bot `isInRange`) (boxBounds bb) || any (bb `isInBox`) (botBounds bot)
 
 ex1 :: [String]
 ex1 =
@@ -31,21 +58,21 @@ parse = map parseLine
 
 parseLine :: String -> Bot
 parseLine l = Bot {pos = (x, y, z), r = radius}
- where
-  (x, y, z, radius) = read ('(' : cleanUp l ++ ")") :: (Int, Int, Int, Int)
-  cleanUp :: String -> String
-  cleanUp =
-    map (\c -> if isDigit c || c == '-' || c == ',' then c else ' ') . drop 5
-
-manhattan :: Coord -> Coord -> Int
-manhattan (a, b, c) (d, e, f) = abs (a - d) + abs (b - e) + abs (c - f)
+  where
+    (x, y, z, radius) = read ('(' : cleanUp l ++ ")") :: (Int, Int, Int, Int)
+    cleanUp :: String -> String
+    cleanUp =
+      map
+        (\c ->
+           if isDigit c || c == '-' || c == ','
+             then c
+             else ' ') .
+      drop 5
 
 solve1 :: [Bot] -> Int
-solve1 bots = length $ filter isInRange bots
- where
-  sb        = strongestBot bots
-  range     = r sb
-  isInRange = (<= range) . manhattan (pos sb) . pos
+solve1 bots = length . filter (isInRange sb) $ map pos bots
+  where
+    sb = strongestBot bots
 
 strongestBot :: [Bot] -> Bot
 strongestBot = maximumBy (comparing r)
