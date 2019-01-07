@@ -1,15 +1,14 @@
 module Main where
 
-import Data.Char (isDigit)
-import Data.List (maximumBy)
-import Data.Ord (comparing)
-import Data.Graph.Inductive
+import           Data.Algorithm.MaximalCliques  ( getMaximalCliques )
+import           Data.Char                      ( isDigit )
+import           Data.List                      ( maximumBy )
+import           Data.Ord                       ( comparing )
 
 type Coord = (Int, Int, Int)
 
 data Bot = Bot
-  { ix :: Int
-  , pos :: Coord
+  { pos :: Coord
   , r :: Int
   } deriving (Show)
 
@@ -22,31 +21,6 @@ manhattan (a, b, c) (d, e, f) = abs (a - d) + abs (b - e) + abs (c - f)
 
 isInRange :: Bot -> Coord -> Bool
 Bot position radius `isInRange` c = manhattan position c <= radius
-
-isInBox :: BoundingBox -> Coord -> Bool
-isInBox (BoundingBox (xmin, ymin, zmin) (xmax, ymax, zmax)) (x, y, z) =
-  x >= xmin && y >= ymin && z >= zmin && xmax >= x && ymax >= y && zmax >= z
-
-botBounds :: Bot -> [Coord]
-botBounds (Bot (x, y, z) radius) =
-  [ (x + dx, y + dy, z + dz)
-  | dx <- [radius, -radius]
-  , dy <- [radius, -radius]
-  , dz <- [radius, -radius]
-  ]
-
-boxBounds :: BoundingBox -> [Coord]
-boxBounds (BoundingBox minb maxb) = [minb, maxb]
-
-boxIntersectsBot :: BoundingBox -> Bot -> Bool
-boxIntersectsBot bb bot =
-  any (bot `isInRange`) (boxBounds bb) || any (bb `isInBox`) (botBounds bot)
-
-
--- buildGraph :: [Bot] 
-buildGraph bots = mkUGraph [1..] connectedBots
-  where
-    connectedBots = [ (botA, botB) | botA <- bots, botB <- bots, manhattan (pos botA) (pos botB) <= r botA + r botB]
 
 ex1 :: [String]
 ex1 =
@@ -62,28 +36,34 @@ ex1 =
   ]
 
 parse :: [String] -> [Bot]
-parse = map parseLine . zip [1..]
+parse = map parseLine
 
-parseLine :: (Int, String) -> Bot
-parseLine (i, l)  = Bot {ix = i, pos = (x, y, z), r = radius}
-  where
-    (x, y, z, radius) = read ('(' : cleanUp l ++ ")") :: (Int, Int, Int, Int)
-    cleanUp :: String -> String
-    cleanUp =
-      map
-        (\c ->
-           if isDigit c || c == '-' || c == ','
-             then c
-             else ' ') .
-      drop 5
+parseLine :: String -> Bot
+parseLine l = Bot {pos = (x, y, z), r = radius}
+ where
+  (x, y, z, radius) = read ('(' : cleanUp l ++ ")") :: (Int, Int, Int, Int)
+  cleanUp :: String -> String
+  cleanUp =
+    map (\c -> if isDigit c || c == '-' || c == ',' then c else ' ') . drop 5
 
 solve1 :: [Bot] -> Int
 solve1 bots = length . filter (isInRange sb) $ map pos bots
-  where
-    sb = strongestBot bots
+  where sb = strongestBot bots
 
 strongestBot :: [Bot] -> Bot
 strongestBot = maximumBy (comparing r)
+
+solve2 :: [Bot] -> Int
+solve2 bots = maximum closests
+ where
+  cliques = getMaximalCliques botsOverlap bots
+
+  biggestClique = maximumBy (comparing length) cliques -- TODO: cheque for uniqueness
+
+  closests = map (\bot -> manhattan (0, 0, 0) (pos bot) - r bot) biggestClique
+
+  botsOverlap :: Bot -> Bot -> Bool
+  botsOverlap bot1 bot2 = manhattan (pos bot1) (pos bot2) <= r bot1 + r bot2
 
 main :: IO ()
 main = do
@@ -99,5 +79,8 @@ main = do
   let linput = lines input
   let pinput = parse linput
   putStrLn "Part 1:"
-  putStrLn "Bots in range of strongst bot:"
+  putStrLn "Bots in range of strongest bot:"
   print $ solve1 pinput
+  -- Part 2
+  putStrLn "Part 2:"
+  print $ solve2 pinput
