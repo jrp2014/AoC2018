@@ -58,7 +58,7 @@ add :: Ord a => Counts a -> a -> Counts a
 add cs c = M.insertWith (+) c 1 cs
 
 charCounts :: String -> Counts Char
-charCounts s = foldl' add M.empty s
+charCounts = foldl' add M.empty
 
 twoThree :: String -> (Bool, Bool)
 twoThree s = let xs = M.elems (charCounts s) in (2 `elem` xs, 3 `elem` xs)
@@ -81,7 +81,7 @@ findMatch ss =
 
 -- Using a Trie
 
-data Trie = Trie [(Char, Int, Trie)]
+newtype Trie = Trie [(Char, Int, Trie)]
   deriving (Show, Eq)
 
 insertS :: Trie -> String -> Trie
@@ -143,7 +143,7 @@ hylo alg coa = alg . fmap (hylo alg coa) . coa
 
 ---
 
-data TrieF a = TrieF [(Char, a)]
+newtype TrieF a = TrieF [(Char, a)]
   deriving (Show, Functor)
 
 -- Define the coalgebra
@@ -162,7 +162,7 @@ mkBranch sss = let c = head (head sss) in (c, fmap tail sss)
 showAlg :: Algebra TrieF [String]
 showAlg (TrieF []) = []
 showAlg (TrieF bs) = fmap (\(c, ss) -> c : offset ss) bs
-  where offset ss = concatMap (\s -> "-" ++ s ++ ".") ss
+  where offset = concatMap (\s -> "-" ++ s ++ ".")
 
 showTrie :: Fix TrieF -> String
 showTrie = concat . cata showAlg
