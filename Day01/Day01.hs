@@ -11,9 +11,7 @@ accumulate :: [Int] -> [Int]
 accumulate = scanl (+) 0
 
 -- This is probably O(N^2) using lists, but is much faster using Sets.
--- version for this problem.  This version will not terminate if there
--- no duplicatess.
--- Could, no doubt be turned into a fold...
+-- This version will not terminate if there are no duplicatess.
 firstDuplicate :: Ord a => [a] -> a
 firstDuplicate = go Set.empty
   where
