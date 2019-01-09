@@ -56,8 +56,8 @@ claimCoords :: Claim -> [Point]
 claimCoords Claim { identifier = i
                   , left = l
                   , top = t
-                  , width = w
-                  , height = h
+                  , width = _
+                  , height = _
                   , bottom = b
                   , right = r
                   } =
