@@ -16,8 +16,7 @@ solve = foldr step []
     step :: Unit -> String -> String
     step u (v:vs)
       | reacts u v = vs
-      | otherwise = u : v : vs
-    step u [] = [u]
+    step u us = u : us
 
 solve1 :: Polymer -> Int
 solve1 = length . solve
